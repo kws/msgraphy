@@ -4,7 +4,6 @@ from typing import List
 from msgraphy.data import graphdataclass
 from msgraphy.data.identity import IdentitySet
 from msgraphy.data.sharepoint import SharePointIds
-from msgraphy.data.user import User
 
 
 @graphdataclass
@@ -34,7 +33,6 @@ class BaseItem:
 
     def get_api_reference(self):
         return f"/drives/{self.parent_reference.drive_id}/items/{self.id}"
-
 
 
 @graphdataclass

@@ -1,1 +1,1 @@
-from .graph_api import GraphApi
+from .api import GraphApi

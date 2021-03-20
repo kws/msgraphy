@@ -1,7 +1,7 @@
 import uuid
 from typing import TypeVar
 
-from msgraphy.graph_client import GraphClient, GraphResponse
+from msgraphy.client.graph_client import GraphClient, GraphResponse
 
 T = TypeVar('T')
 

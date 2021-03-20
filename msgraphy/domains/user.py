@@ -1,6 +1,6 @@
 from msgraphy.data.file import Drive
 from msgraphy.data.user import User, UserList
-from msgraphy.graph_client import GraphResponse
+from msgraphy.client.graph_client import GraphResponse
 
 
 class UserGraphApi:

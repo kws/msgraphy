@@ -1,9 +1,8 @@
 import abc
-from contextlib import contextmanager
 from typing import TypeVar, Generic
 import requests
 
-from msgraphy.graph_auth import TokenStore, login
+from msgraphy.auth.graph_auth import TokenStore, login
 
 T = TypeVar('T')
 
@@ -44,10 +43,17 @@ class RequestsGraphResponse(GraphResponse[T]):
         return self.__response.text
 
     @property
+    def response(self) -> requests.Response:
+        return self.__response
+
+    @property
     def value(self) -> T:
         self.__response.raise_for_status()
-        data = self.__response.json()
-        return self.__response_type(data)
+        if hasattr(self.__response_type, 'from_response'):
+            return self.__response_type.from_response(self.__response)
+        else:
+            data = self.__response.json()
+            return self.__response_type(data)
 
 
 class GraphClient(abc.ABC):
@@ -76,11 +82,14 @@ class RequestsGraphClient(GraphClient):
 
         return self._token.access_token
 
-    def make_request(self, url, method="get", headers=None, response_type: T = dict, **kwargs) -> GraphResponse[T]:
-        headers = headers if headers else {}
-        headers = {**headers, "Authorization": f'Bearer {self.__access_token}'}
+    def make_request(self, url, method="get", headers=None, response_type: T = dict, use_auth=True, **kwargs) -> GraphResponse[T]:
+        if use_auth:
+            headers = headers if headers else {}
+            headers = {**headers, "Authorization": f'Bearer {self.__access_token}'}
 
-        response = requests.request(method, f"{self._config['root_url']}{url}", headers=headers, **kwargs)
+        if not url.startswith("http"):
+            url = f"{self._config['root_url']}{url}"
+        response = requests.request(method, url, headers=headers, **kwargs)
         return RequestsGraphResponse(response, response_type)
 
 

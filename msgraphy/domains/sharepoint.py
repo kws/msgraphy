@@ -2,7 +2,7 @@ from typing import Union
 
 from msgraphy.data.file import DriveList, Drive
 from msgraphy.data.sharepoint import SiteResource, Site
-from msgraphy.graph_client import GraphResponse
+from msgraphy.client.graph_client import GraphResponse
 
 
 class SharepointGraphApi:
