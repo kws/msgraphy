@@ -27,15 +27,15 @@ class FilesGraphApi:
 
         drivename, filename = filename.split(":", 1)
         if '@' in drivename:
-            user = self._api.user.get_user_by_email(email=drivename)
-            drive = self._api.user.get_user_drive(user)
+            user = self._api.user.get_user_by_email(email=drivename).value
+            drive = self._api.user.get_user_drive(user).value
         elif '/' in drivename:
             sitename, drivename = drivename.split("/", 1)
-            site = self._api.sharepoint.get_site_resource(name=sitename)
-            drive = self._api.sharepoint.get_drive_by_name(site, drivename)
+            site = self._api.sharepoint.get_site_resource(name=sitename).value
+            drive = self._api.sharepoint.get_drive_by_name(site, drivename).value
         else:
-            site = self._api.sharepoint.get_site_resource(drivename)
-            drive = self._api.sharepoint.get_drive_by_name(site)
+            site = self._api.sharepoint.get_site_resource(drivename).value
+            drive = self._api.sharepoint.get_drive_by_name(site).value
 
         return drive, filename
 
@@ -60,5 +60,4 @@ class FilesGraphApi:
         if filename and filename != "/":
             resource += f":{filename}"
 
-        response = self._api.client.make_request(url=resource, method="get")
-        return DriveItem(response.json())
+        return self._api.client.make_request(url=resource, method="get", response_type=DriveItem)

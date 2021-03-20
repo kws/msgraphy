@@ -2,6 +2,8 @@ import abc
 from dataclasses import dataclass
 from time import time
 
+import requests
+
 
 class TokenStore(abc.ABC):
 
@@ -70,3 +72,13 @@ class FileTokenStore(TokenStore):
         with open(self.filename, 'wt') as fp:
             data = token.as_dict()
             self.json.dump(data, fp)
+
+
+def login(client_id, client_secret, scope, grant_type, tenant, **kwargs) -> TokenStore.Token:
+    data = dict(client_id=client_id, client_secret=client_secret, scope=scope, grant_type=grant_type)
+    response = requests.post(
+        url=f'https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token',
+        data=data
+    )
+    response.raise_for_status()
+    return TokenStore.Token.from_dict(response.json())

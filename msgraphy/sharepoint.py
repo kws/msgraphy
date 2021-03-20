@@ -2,6 +2,7 @@ from typing import Union
 
 from msgraphy.data.file import DriveList, Drive
 from msgraphy.data.sharepoint import SiteResource, Site
+from msgraphy.graph_client import GraphResponse
 
 
 class SharepointGraphApi:
@@ -14,19 +15,19 @@ class SharepointGraphApi:
 
         return SiteResource(name=name, site_collection=site_collection)
 
-    def get_site(self, site: SiteResource) -> Site:
-        response = self._api.client.make_request(url=site.resource)
-        return Site(response.json())
+    def get_site(self, site: SiteResource) -> GraphResponse[Site]:
+        return self._api.client.make_request(url=site.resource, response_type=Site)
 
-    def list_drives(self, site: SiteResource) -> DriveList:
+    def list_drives(self, site: SiteResource) -> GraphResponse[DriveList]:
         resource = site.resource + "/drives"
-        response = self._api.client.make_request(url=resource)
-        return DriveList(response.json())
+        return self._api.client.make_request(url=resource, response_type=DriveList)
 
-    def get_drive_by_name(self, site: SiteResource, name: str = "Documents") -> Union[Drive, None]:
-        drives = self.list_drives(site)
-        for d in drives:
-            if d.name == name:
-                return d
+    def get_drive_by_name(self, site: SiteResource, name: str = "Documents") -> GraphResponse[Union[Drive, None]]:
+        def name_filter(data):
+            drives = DriveList(data)
+            for d in drives:
+                if d.name == name:
+                    return d
 
-        return None
+        resource = site.resource + "/drives"
+        return self._api.client.make_request(url=resource, response_type=name_filter)

@@ -15,3 +15,8 @@ class User:
     preferred_language: str = None
     surname: str = None
     user_principal_name: str = None
+
+
+@graphdataclass
+class UserList:
+    value: List[User]
