@@ -1,5 +1,5 @@
 from typing import List
-from extras.graph_api.data import graphdataclass
+from msgraphy.data import graphdataclass
 
 
 @graphdataclass

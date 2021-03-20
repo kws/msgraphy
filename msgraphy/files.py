@@ -1,7 +1,7 @@
 import urllib
 from typing import Tuple
 
-from extras.graph_api.data.file import Drive, DriveItem
+from msgraphy.data.file import Drive, DriveItem
 
 
 class FilesGraphApi:

@@ -1,7 +1,7 @@
 from typing import Union
 
-from extras.graph_api.data.file import DriveList, Drive
-from extras.graph_api.data.sharepoint import SiteResource, Site
+from msgraphy.data.file import DriveList, Drive
+from msgraphy.data.sharepoint import SiteResource, Site
 
 
 class SharepointGraphApi:

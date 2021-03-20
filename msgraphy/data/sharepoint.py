@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from extras.graph_api.data import graphdataclass
+from msgraphy.data import graphdataclass
 
 
 @graphdataclass

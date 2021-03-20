@@ -2,11 +2,11 @@
 class GraphApi:
 
     def __init__(self, token_store, **kwargs):
-        from extras.graph_api.files import FilesGraphApi
-        from extras.graph_api.graph_client import GraphClient
-        from extras.graph_api.sharepoint import SharepointGraphApi
-        from extras.graph_api.user import UserGraphApi
-        from extras.graph_api.workbook import WorkbookGraphApi
+        from msgraphy.files import FilesGraphApi
+        from msgraphy.graph_client import GraphClient
+        from msgraphy.sharepoint import SharepointGraphApi
+        from msgraphy.user import UserGraphApi
+        from msgraphy.workbook import WorkbookGraphApi
 
         self.client = GraphClient(token_store, **kwargs)
         self.files = FilesGraphApi(self)

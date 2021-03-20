@@ -1,22 +1,21 @@
 import sys
 from typing import Iterable
 import requests
-from frozendict import frozendict
 from requests import HTTPError
 
-from extras.graph_api.graph_auth import TokenStore
+from msgraphy.graph_auth import TokenStore
 
 
 class GraphClient:
 
-    DEFAULTS = frozendict(
+    DEFAULTS = dict(
         root_url="https://graph.microsoft.com/v1.0/",
         scope='https://graph.microsoft.com/.default',
         grant_type='client_credentials',
     )
 
     def __init__(self, token_store: TokenStore, **kwargs):
-        self._config = frozendict(**GraphClient.DEFAULTS, **kwargs)
+        self._config = dict(**GraphClient.DEFAULTS, **kwargs)
         self._token_store = token_store
         self._token: TokenStore.Token = self._token_store.load_token()
 
@@ -34,6 +33,9 @@ class GraphClient:
             'scope': self._config['scope'],
             'grant_type': self._config['grant_type'],
         }
+
+        assert self._config["tenant"], "No tenant in config"
+
         response = requests.post(
             url=f'https://login.microsoftonline.com/{self._config["tenant"]}/oauth2/v2.0/token',
             data=data

@@ -1,10 +1,10 @@
 import datetime
 from typing import List
 
-from extras.graph_api.data import graphdataclass
-from extras.graph_api.data.identity import IdentitySet
-from extras.graph_api.data.sharepoint import SharePointIds
-from extras.graph_api.data.user import User
+from msgraphy.data import graphdataclass
+from msgraphy.data.identity import IdentitySet
+from msgraphy.data.sharepoint import SharePointIds
+from msgraphy.data.user import User
 
 
 @graphdataclass

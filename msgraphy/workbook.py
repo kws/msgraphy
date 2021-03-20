@@ -1,8 +1,8 @@
 from contextlib import contextmanager
 from typing import Union, List
 
-from extras.graph_api.data.file import DriveItem
-from extras.graph_api.data.workbook import TableList, WorkbookSessionInfo, WorkbookTableRow, WorkbookTableRowList, \
+from msgraphy.data.file import DriveItem
+from msgraphy.data.workbook import TableList, WorkbookSessionInfo, WorkbookTableRow, WorkbookTableRowList, \
     WorkbookTableColumnList, WorkbookRange
 
 

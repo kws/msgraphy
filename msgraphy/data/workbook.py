@@ -1,7 +1,7 @@
 from typing import List
 
-from extras.graph_api.data import graphdataclass
-from extras.graph_api.data.file import DriveItem
+from msgraphy.data import graphdataclass
+from msgraphy.data.file import DriveItem
 
 
 @graphdataclass

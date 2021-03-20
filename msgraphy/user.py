@@ -1,5 +1,5 @@
-from extras.graph_api.data.file import Drive
-from extras.graph_api.data.user import User
+from msgraphy.data.file import Drive
+from msgraphy.data.user import User
 
 
 class UserGraphApi:

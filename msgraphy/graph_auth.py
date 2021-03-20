@@ -51,3 +51,22 @@ class TokenStore(abc.ABC):
         """
         return NotImplemented
 
+
+class FileTokenStore(TokenStore):
+    import json
+
+    def __init__(self, filename):
+        self.filename = filename
+
+    def load_token(self) -> TokenStore.Token:
+        try:
+            with open(self.filename, 'rt') as fp:
+                data = self.json.load(fp)
+                return TokenStore.Token.from_dict(data)
+        except FileNotFoundError:
+            return None
+
+    def save_token(self, token: TokenStore.Token):
+        with open(self.filename, 'wt') as fp:
+            data = token.as_dict()
+            self.json.dump(data, fp)
