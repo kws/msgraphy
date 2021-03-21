@@ -22,5 +22,10 @@ class UserGraphApi:
         )
 
     def get_user_drive(self, user: User) -> GraphResponse[Drive]:
-        assert user.id
-        return self._api.client.make_request(url=f"/users/{user.id}/drive", method="get", response_type=Drive)
+        if user.id:
+            id = user.id
+        elif user.user_principal_name:
+            id = user.user_principal_name
+        else:
+            raise ValueError("The user must have either id or user_principal_name set.")
+        return self._api.client.make_request(url=f"/users/{id}/drive", method="get", response_type=Drive)

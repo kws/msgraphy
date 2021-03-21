@@ -88,6 +88,8 @@ class RequestsGraphClient(GraphClient):
             headers = {**headers, "Authorization": f'Bearer {self.__access_token}'}
 
         if not url.startswith("http"):
+            if url.startswith("/"):
+                url = url[1:]
             url = f"{self._config['root_url']}{url}"
         response = requests.request(method, url, headers=headers, **kwargs)
         return RequestsGraphResponse(response, response_type)

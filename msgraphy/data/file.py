@@ -47,6 +47,9 @@ class Drive(BaseItem):
     special: List["DriveItem"] = None
     system: str = None
 
+    def get_api_reference(self):
+        return f"/drives/{self.id}"
+
 
 @graphdataclass
 class FileSystemInfo:
