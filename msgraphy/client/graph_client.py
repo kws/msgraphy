@@ -1,8 +1,11 @@
 import abc
-from typing import TypeVar, Generic
+import dataclasses
+from typing import TypeVar, Generic, Callable
 import requests
 
-from msgraphy.auth.graph_auth import TokenStore, login
+URL_V1 = "https://graph.microsoft.com/v1.0/"
+URL_BETA = "https://graph.microsoft.com/beta/"
+
 
 T = TypeVar('T')
 
@@ -43,6 +46,10 @@ class RequestsGraphResponse(GraphResponse[T]):
         return self.__response.text
 
     @property
+    def headers(self) -> dict:
+        return self.__response.headers
+
+    @property
     def response(self) -> requests.Response:
         return self.__response
 
@@ -64,33 +71,25 @@ class GraphClient(abc.ABC):
 
 class RequestsGraphClient(GraphClient):
     DEFAULTS = dict(
-        root_url="https://graph.microsoft.com/v1.0/",
+        root_url=URL_V1,
         scope='https://graph.microsoft.com/.default',
         grant_type='client_credentials',
     )
 
-    def __init__(self, token_store: TokenStore, **kwargs):
+    def __init__(self, token_fetcher: Callable, **kwargs):
         self._config = dict(**RequestsGraphClient.DEFAULTS, **kwargs)
-        self._token_store = token_store
-        self._token: TokenStore.Token = self._token_store.load_token()
-
-    @property
-    def __access_token(self) -> str:
-        if self._token is None or self._token.almost_expired():
-            self._token = login(**self._config)
-            self._token_store.save_token(self._token)
-
-        return self._token.access_token
+        self.__token_fetcher = token_fetcher
 
     def make_request(self, url, method="get", headers=None, response_type: T = dict, use_auth=True, **kwargs) -> GraphResponse[T]:
         if use_auth:
             headers = headers if headers else {}
-            headers = {**headers, "Authorization": f'Bearer {self.__access_token}'}
+            headers = {**headers, "Authorization": f'Bearer {self.__token_fetcher()}'}
 
         if not url.startswith("http"):
             if url.startswith("/"):
                 url = url[1:]
             url = f"{self._config['root_url']}{url}"
+
         response = requests.request(method, url, headers=headers, **kwargs)
         return RequestsGraphResponse(response, response_type)
 

@@ -1,84 +1,24 @@
-import abc
-from dataclasses import dataclass
-from time import time
-
-import requests
+import atexit, msal
 
 
-class TokenStore(abc.ABC):
+class FileSystemTokenCache(msal.SerializableTokenCache):
 
-    @dataclass
-    class Token:
-        """An OAUTH token."""
-        access_token: str
-        expires_at: float
+    def __init__(self, filename, save_on_exit=False):
+        self.__filename = filename
+        super(FileSystemTokenCache, self).__init__()
+        self.load()
+        if save_on_exit:
+            atexit.register(self.save)
 
-        def expired(self):
-            if self.expires_at is None:
-                return True
-            else:
-                return self.expires_at <= time()
-
-        def almost_expired(self, delta=30):
-            if self.expires_at is None:
-                return True
-            else:
-                return self.expires_at <= time() + delta
-
-        def as_dict(self) -> dict:
-            return dict(access_token=self.access_token, expires_at=self.expires_at)
-
-        @classmethod
-        def from_dict(cls, token: dict):
-            expires_at = token.get("expires_at")
-            if expires_at is None:
-                expires_at = time() + token.get('expires_in', 0)
-            return TokenStore.Token(
-                access_token=token.get("access_token"),
-                expires_at=expires_at,
-            )
-
-    @abc.abstractmethod
-    def load_token(self) -> Token:
-        """
-        Loads a token
-        :return: token
-        """
-        return NotImplemented
-
-    @abc.abstractmethod
-    def save_token(self, token: Token):
-        """
-        Saves the token
-        """
-        return NotImplemented
-
-
-class FileTokenStore(TokenStore):
-    import json
-
-    def __init__(self, filename):
-        self.filename = filename
-
-    def load_token(self) -> TokenStore.Token:
+    def load(self):
         try:
-            with open(self.filename, 'rt') as fp:
-                data = self.json.load(fp)
-                return TokenStore.Token.from_dict(data)
-        except FileNotFoundError:
-            return None
+            with open(self.__filename, 'r') as file:
+                self.deserialize(file.read())
+        except:
+            pass
 
-    def save_token(self, token: TokenStore.Token):
-        with open(self.filename, 'wt') as fp:
-            data = token.as_dict()
-            self.json.dump(data, fp)
+    def save(self):
+        with open(self.__filename, 'w') as file:
+            file.write(self.serialize())
 
 
-def login(client_id, client_secret, scope, grant_type, tenant, **kwargs) -> TokenStore.Token:
-    data = dict(client_id=client_id, client_secret=client_secret, scope=scope, grant_type=grant_type)
-    response = requests.post(
-        url=f'https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token',
-        data=data
-    )
-    response.raise_for_status()
-    return TokenStore.Token.from_dict(response.json())

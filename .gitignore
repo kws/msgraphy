@@ -1,5 +1,6 @@
 .env
 .o365_token
+.auth*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
