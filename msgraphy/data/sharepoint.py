@@ -16,12 +16,12 @@ class SharePointIds:
 
 @graphdataclass
 class SiteResource:
-    name: str
-    site_collection: dict
+    name: str = None
+    site_collection: dict = None
 
     @property
     def resource(self):
-        resource = f"sites/{self.site_collection['hostname']}"
+        resource = f"sites/{self.site_collection.get('hostname', 'root')}" if self.site_collection else "/sites/root"
         if self.name is not None and self.name != "":
             resource += f":/sites/{self.name}:"
         return resource
@@ -29,10 +29,10 @@ class SiteResource:
 
 @graphdataclass
 class Site(SiteResource):
-    display_name: str
-    id: str
-    description: str
-    created_date_time: datetime
-    last_modified_date_time:  datetime
-    web_url: str
-    root: str
+    display_name: str = None
+    id: str = None
+    description: str = None
+    created_date_time: datetime = None
+    last_modified_date_time:  datetime = None
+    web_url: str = None
+    root: str = None

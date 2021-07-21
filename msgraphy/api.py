@@ -5,6 +5,7 @@ from contextlib import contextmanager
 class GraphApi:
     __parts = {
         'files': 'msgraphy.domains.files.FilesGraphApi',
+        'list': 'msgraphy.domains.list.ListGraphApi',
         'monitor': 'msgraphy.domains.monitor.MonitorGraphApi',
         'sharepoint': 'msgraphy.domains.sharepoint.SharepointGraphApi',
         'user': 'msgraphy.domains.user.UserGraphApi',

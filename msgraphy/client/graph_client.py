@@ -1,5 +1,4 @@
 import abc
-import dataclasses
 from typing import TypeVar, Generic, Callable
 import requests
 
@@ -68,17 +67,26 @@ class GraphClient(abc.ABC):
     def make_request(self, url, method="get", headers=None, response_type: T = dict, **kwargs) -> GraphResponse[T]:
         return NotImplemented
 
+    @property
+    def single_client(self) -> "GraphClient":
+        return NotImplemented
+
 
 class RequestsGraphClient(GraphClient):
     DEFAULTS = dict(
         root_url=URL_V1,
         scope='https://graph.microsoft.com/.default',
         grant_type='client_credentials',
+        timeout=5,
     )
 
     def __init__(self, token_fetcher: Callable, **kwargs):
-        self._config = dict(**RequestsGraphClient.DEFAULTS, **kwargs)
+        self._config = {**RequestsGraphClient.DEFAULTS, **kwargs}
         self.__token_fetcher = token_fetcher
+
+    @property
+    def single_client(self) -> GraphClient:
+        return self
 
     def make_request(self, url, method="get", headers=None, response_type: T = dict, use_auth=True, **kwargs) -> GraphResponse[T]:
         if use_auth:
@@ -90,7 +98,9 @@ class RequestsGraphClient(GraphClient):
                 url = url[1:]
             url = f"{self._config['root_url']}{url}"
 
-        response = requests.request(method, url, headers=headers, **kwargs)
+        request_args = {"timeout": self._config['timeout'], **kwargs}
+
+        response = requests.request(method, url, headers=headers, **request_args)
         return RequestsGraphResponse(response, response_type)
 
 

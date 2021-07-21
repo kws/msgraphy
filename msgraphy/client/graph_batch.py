@@ -1,7 +1,11 @@
+import logging
 import uuid
 from typing import TypeVar
+from urllib.parse import urlparse, parse_qs, urlencode, ParseResult, urlunparse
 
 from msgraphy.client.graph_client import GraphClient, GraphResponse
+
+logger = logging.getLogger(__name__)
 
 T = TypeVar('T')
 
@@ -12,10 +16,15 @@ class StateError(Exception):
 
 
 class RequestsGraphResponse(GraphResponse[T]):
-    def __init__(self, id, response_type):
+    def __init__(self, client, id, response_type):
+        self.client = client
         self.id = id
         self.response_type = response_type
         self.response = None
+
+    def __ensure_response(self):
+        if not self.response:
+            self.client.flush()
 
     @property
     def ready(self) -> bool:
@@ -23,18 +32,18 @@ class RequestsGraphResponse(GraphResponse[T]):
 
     @property
     def ok(self) -> bool:
-        try:
+        self.__ensure_response()
+        if "status" in self.response:
+            return self.response['status'] < 400
+        else:
+            print(self.response)
             return self.response.ok
-        except AttributeError:
-            raise StateError("Response is not ready.")
 
     @property
     def value(self) -> T:
-        try:
-            data = self.response['body']
-            return self.response_type(data)
-        except AttributeError:
-            raise StateError("Response is not ready.")
+        self.__ensure_response()
+        data = self.response['body']
+        return self.response_type(data)
 
 
 class BatchGraphClient(GraphClient):
@@ -44,15 +53,39 @@ class BatchGraphClient(GraphClient):
         self.__requests = []
         self.__responses = {}
 
-    def make_request(self, url, method="get", headers=None, response_type: T = dict, **kwargs) -> GraphResponse[T]:
+    @property
+    def single_client(self):
+        return self.__client
+
+    def make_request(self, url, method="get", headers=None, response_type: T = dict, json=None, body=None,
+                     params=None, **kwargs) -> GraphResponse[T]:
         id = str(uuid.uuid4())
 
-        method = method.upper()
-        values = dict(id=id, method=method, url=url)
-        if headers:
-            values['headers'] = headers
+        request_args = {}
 
-        response = RequestsGraphResponse(id, response_type=response_type)
+        if not headers:
+            headers = {}
+
+        if json:
+            headers['Content-Type'] = 'application/json'
+            request_args['body'] = json
+
+        if body:
+            request_args['body'] = body
+
+        if params:
+            pr = urlparse(url)
+            query = parse_qs(pr.query)
+            query = {**query, **params}
+            query = urlencode(query, doseq=True)
+            new_url = ParseResult(scheme=pr.scheme, netloc=pr.netloc, path=pr.path, params=pr.params,
+                                  query=query, fragment=pr.fragment)
+            url = urlunparse(new_url)
+
+        method = method.upper()
+        values = dict(id=id, method=method, url=url, headers=headers, **request_args)
+
+        response = RequestsGraphResponse(self, id, response_type=response_type)
 
         self.__requests.append(values)
         self.__responses[id] = response
@@ -74,3 +107,5 @@ class BatchGraphClient(GraphClient):
             response = self.__client.make_request("$batch", method="post", json=dict(requests=batch))
             for r in response.value["responses"]:
                 self.__responses.pop(r['id']).response = r
+                if r['status'] > 299:
+                    logger.error(f"Batched request failed: {r}")
