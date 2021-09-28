@@ -105,7 +105,6 @@ class FilesGraphApi:
     def upload_file(self, parent: BaseItem, filename: str, file):
         file_path = Path(file)
         file_size = file_path.stat().st_size
-        print(f"Uploading file of size {file_size} bytes")
         if file_size < self.__large_file_threshold:
             return self.__upload_small_file(parent, filename, file_path)
         else:

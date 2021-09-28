@@ -11,7 +11,10 @@ class SharepointGraphApi:
 
     def get_site_resource(self, name=None, site_collection: dict = None) -> SiteResource:
         if site_collection is None:
-            site_collection = dict(hostname=self._api.client._config["root_site"])
+            try:
+                site_collection = dict(hostname=self._api.client._config["root_site"])
+            except:
+                site_collection = dict()
 
         return SiteResource(name=name, site_collection=site_collection)
 

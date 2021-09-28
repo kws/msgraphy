@@ -1,36 +1,26 @@
-import importlib
 from contextlib import contextmanager
+from msgraphy.domains.files import FilesGraphApi
+from msgraphy.domains.group import GroupGraphApi
+from msgraphy.domains.list import ListGraphApi
+from msgraphy.domains.monitor import MonitorGraphApi
+from msgraphy.domains.sharepoint import SharepointGraphApi
+from msgraphy.domains.user import UserGraphApi
+from msgraphy.domains.workbook import WorkbookGraphApi
 
 
 class GraphApi:
-    __parts = {
-        'files': 'msgraphy.domains.files.FilesGraphApi',
-        'list': 'msgraphy.domains.list.ListGraphApi',
-        'monitor': 'msgraphy.domains.monitor.MonitorGraphApi',
-        'sharepoint': 'msgraphy.domains.sharepoint.SharepointGraphApi',
-        'user': 'msgraphy.domains.user.UserGraphApi',
-        'workbook': 'msgraphy.domains.workbook.WorkbookGraphApi',
-    }
 
     def __init__(self, client, is_batch=False):
         self.client = client
         self._is_batch = is_batch
-        self.__api_parts = {}
 
-    def __getattr__(self, item):
-        prop = self.__api_parts.get(item)
-        if prop:
-            return prop
-        elif item in self.__parts:
-            module = self.__parts[item]
-            p, cls = module.rsplit('.', 1)
-            p = importlib.import_module(p)
-            cls = getattr(p, cls)
-            instance = cls(self)
-            self.__api_parts[item] = instance
-            return instance
-        else:
-            raise AttributeError(item)
+        self.files = FilesGraphApi(self)
+        self.group = GroupGraphApi(self)
+        self.list = ListGraphApi(self)
+        self.monitor = MonitorGraphApi(self)
+        self.sharepoint = SharepointGraphApi(self)
+        self.user = UserGraphApi(self)
+        self.workbook = WorkbookGraphApi(self)
 
     @contextmanager
     def batch(self):

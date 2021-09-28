@@ -1,3 +1,4 @@
+from msgraphy.data import ApiIterable
 from msgraphy.data.file import Drive
 from msgraphy.data.user import User, UserList
 from msgraphy.client.graph_client import GraphResponse
@@ -29,3 +30,10 @@ class UserGraphApi:
         else:
             raise ValueError("The user must have either id or user_principal_name set.")
         return self._api.client.make_request(url=f"/users/{id}/drive", method="get", response_type=Drive)
+
+    def list_users(self, select=None):
+        response_type = ApiIterable(self._api.client, User)
+        params = {}
+        if select:
+            params['$select'] = ",".join(select)
+        return self._api.client.make_request(url=f"/users", params=params, response_type=response_type)

@@ -99,6 +99,3 @@ def ApiIterable(client, type: T):
 @graphdataclass
 class ListResponse(typing.Generic[T]):
     value: typing.List[T]
-
-    def __iter__(self):
-        return iter(self.value)
