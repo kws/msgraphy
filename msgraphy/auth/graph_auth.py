@@ -1,4 +1,5 @@
 import atexit
+import os
 from pathlib import Path
 from typing import List, Union
 import msal
@@ -57,3 +58,66 @@ class InteractiveTokenWrapper:
 
         result = self.__app.acquire_token_interactive(self.__scopes)
         return result['access_token']
+
+
+class ConfidentialTokenWrapper:
+    """
+    Provides your API with a way of getting up-to-date credentials.
+
+    Fetches a new token if your token has expired or is about to expire, but does not validate the
+    token this in any way, nor is it aware of any exception in the client layer.
+
+
+    To use this, simply pass to the Graph Client:
+    RequestsGraphClient(ConfidentialTokenWrapper(ConfidentialClientApplication(....), ['Scope1', 'Scope2']))
+
+    """
+
+    def __init__(self, app: msal.ConfidentialClientApplication, scopes: List[str]):
+        self.__app = app
+        self.__scopes = scopes
+
+    def __call__(self):
+        for account in self.__app.get_accounts():
+            result = self.__app.acquire_token_silent(self.__scopes, account=account)
+            if result and 'access_token' in result and result.get('expires_in', 0) > 30:
+                return result['access_token']
+
+        result = self.__app.acquire_token_for_client(scopes=self.__scopes)
+        return result['access_token']
+
+
+class BasicAuth:
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+    except ModuleNotFoundError:
+        pass
+
+    client_id = os.environ['SHAREPOINT_CLIENT_ID']
+    tenant_id = os.environ['SHAREPOINT_TENANT']
+    client_credential = os.getenv("SHAREPOINT_CLIENT_SECRET")
+    authority = f"https://login.microsoftonline.com/{tenant_id}"
+
+    def __init__(self):
+        if self.client_credential:
+            self.__token_fetcher = ConfidentialTokenWrapper(
+                msal.ConfidentialClientApplication(
+                    self.client_id,
+                    authority=self.authority,
+                    client_credential=self.client_credential
+                ),
+                scopes=['https://graph.microsoft.com/.default'],
+            )
+        else:
+            self.__token_fetcher = InteractiveTokenWrapper(
+                msal.PublicClientApplication(
+                    self.client_id,
+                    authority=self.authority,
+                    scopes=['Sites.ReadWrite.All']
+                )
+            )
+
+    def __call__(self):
+        return self.__token_fetcher()
+

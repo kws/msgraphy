@@ -16,7 +16,7 @@ class SharePointIds:
 
 @graphdataclass
 class SiteResource:
-    name: str
+    name: str = None
     site_collection: dict = None
 
     @property
