@@ -94,28 +94,36 @@ class BasicAuth:
     except ModuleNotFoundError:
         pass
 
-    client_id = os.environ['SHAREPOINT_CLIENT_ID']
-    tenant_id = os.environ['SHAREPOINT_TENANT']
-    client_credential = os.getenv("SHAREPOINT_CLIENT_SECRET")
-    authority = f"https://login.microsoftonline.com/{tenant_id}"
+    def __init__(self, scopes=None):
+        client_id = os.environ['SHAREPOINT_CLIENT_ID']
+        tenant_id = os.environ['SHAREPOINT_TENANT']
+        client_credential = os.getenv("SHAREPOINT_CLIENT_SECRET")
+        authority = f"https://login.microsoftonline.com/{tenant_id}"
 
-    def __init__(self):
-        if self.client_credential:
+        token_cache = os.environ.get("AUTH_TOKEN_CACHE")
+        if token_cache:
+            token_cache = FileSystemTokenCache(token_cache, save_on_exit=True)
+
+        if not scopes:
+            scopes = ['https://graph.microsoft.com/.default']
+        if client_credential:
             self.__token_fetcher = ConfidentialTokenWrapper(
                 msal.ConfidentialClientApplication(
-                    self.client_id,
-                    authority=self.authority,
-                    client_credential=self.client_credential
+                    client_id,
+                    authority=authority,
+                    client_credential=client_credential,
+                    token_cache = token_cache,
                 ),
-                scopes=['https://graph.microsoft.com/.default'],
+                scopes=scopes,
             )
         else:
             self.__token_fetcher = InteractiveTokenWrapper(
                 msal.PublicClientApplication(
-                    self.client_id,
-                    authority=self.authority,
-                    scopes=['Sites.ReadWrite.All']
-                )
+                    client_id,
+                    authority=authority,
+                    token_cache = token_cache,
+            ),
+                scopes=scopes
             )
 
     def __call__(self):

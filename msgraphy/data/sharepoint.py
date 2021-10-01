@@ -21,8 +21,11 @@ class SiteResource:
 
     @property
     def resource(self):
-        if self.id:
-            return f"sites/{self.id}"
+        try:
+            if self.id:
+                return f"sites/{self.id}"
+        except AttributeError:
+            pass
 
         resource = f"sites/{self.site_collection.get('hostname', 'root')}" if self.site_collection else "/sites/root"
         if self.name is not None and self.name != "":

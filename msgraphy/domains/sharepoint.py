@@ -22,9 +22,14 @@ class SharepointGraphApi:
     def get_site(self, site: SiteResource) -> GraphResponse[Site]:
         return self._api.client.make_request(url=site.resource, response_type=Site)
 
-    def list_sites(self) -> GraphResponse[ListResponse[Site]]:
+    def list_sites(self, search=None) -> GraphResponse[ListResponse[Site]]:
         response_type = ApiIterable(self._api.client, Site)
-        return self._api.client.make_request(url="/sites", response_type=response_type)
+
+        params = {}
+        if search:
+            params['search'] = search
+
+        return self._api.client.make_request(url="/sites", params=params, response_type=response_type)
 
     def list_drives(self, site: SiteResource) -> GraphResponse[DriveList]:
         resource = site.resource + "/drives"

@@ -1,9 +1,14 @@
 import re
 import typing
-from dataclasses import dataclass
+from humps import camelize
+from dataclasses import dataclass, asdict
 
 pattern = re.compile(r'(?<!^)(?=[A-Z])')
 __list = list
+
+
+def __dict_factory(props):
+    return {camelize(k): v for k, v in props if v}
 
 
 def __camel_to_snake__(name):
@@ -48,6 +53,8 @@ def graphdataclass(cls, *args, **kwargs):
         self.api_missing_fields = missing
         self.api_missing_props = [x[0] for x in missing.values()]
 
+        self.asdict = lambda: asdict(self, dict_factory=__dict_factory)
+
         try:
             old_init(self, *args, **kwargs)
         except TypeError as ex:
@@ -87,14 +94,29 @@ class ApiIterator:
 T = typing.TypeVar('T')
 
 
-def ApiIterable(client, type: T):
+class FilterIterator:
 
+    def __init__(self, wrapped, filter):
+        self.__wrapped = wrapped
+        self.__filter = filter
+
+    def __next__(self):
+        v = next(self.__wrapped)
+        while not self.__filter(v):
+            v = next(self.__wrapped)
+        return v
+
+
+def ApiIterable(client, type: T, filter=None):
     @graphdataclass
     class IterableType(typing.Generic[T]):
         value: typing.List[type]
 
         def __iter__(self):
-            return ApiIterator(client, IterableType, self)
+            iter = ApiIterator(client, IterableType, self)
+            if filter:
+                iter = FilterIterator(iter, filter)
+            return iter
 
     return IterableType[T]
 

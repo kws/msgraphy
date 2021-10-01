@@ -4,6 +4,7 @@ from msgraphy.domains.group import GroupGraphApi
 from msgraphy.domains.list import ListGraphApi
 from msgraphy.domains.monitor import MonitorGraphApi
 from msgraphy.domains.sharepoint import SharepointGraphApi
+from msgraphy.domains.team import TeamGraphApi
 from msgraphy.domains.user import UserGraphApi
 from msgraphy.domains.workbook import WorkbookGraphApi
 
@@ -19,6 +20,7 @@ class GraphApi:
         self.list = ListGraphApi(self)
         self.monitor = MonitorGraphApi(self)
         self.sharepoint = SharepointGraphApi(self)
+        self.team = TeamGraphApi(self)
         self.user = UserGraphApi(self)
         self.workbook = WorkbookGraphApi(self)
 

@@ -12,6 +12,9 @@ class GroupGraphApi:
     def get_group_by_id(self, group_id: str) -> GraphResponse[Group]:
         return self._api.client.make_request(url=f"/groups/{group_id}", response_type=Group)
 
+    def delete(self, group_id: str) -> GraphResponse[Group]:
+        return self._api.client.make_request(url=f"/groups/{group_id}", method="delete")
+
     def list_groups(self) -> GraphResponse[ListResponse[Group]]:
         response_type = ApiIterable(self._api.client, Group)
         return self._api.client.make_request(url=f"/groups", response_type=response_type)
