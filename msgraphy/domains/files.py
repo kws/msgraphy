@@ -102,6 +102,10 @@ class FilesGraphApi:
         return self._api.client.make_request(url=resource, method="post", params=params,
                                              json=body, response_type=Monitor)
 
+    def download_file(self, item: DriveItem):
+        resource = f"{item.get_api_reference()}/content"
+        return self._api.client.make_request(url=resource, stream=True)
+
     def upload_file(self, parent: BaseItem, filename: str, file):
         file_path = Path(file)
         file_size = file_path.stat().st_size
