@@ -48,7 +48,10 @@ def graphdataclass(cls, *args, **kwargs):
         self.api_missing_fields = missing
         self.api_missing_props = [x[0] for x in missing.values()]
 
-        old_init(self, *args, **kwargs)
+        try:
+            old_init(self, *args, **kwargs)
+        except TypeError as ex:
+            raise TypeError(f"{type(self)} ~ {ex}")
 
     new_cls.__init__ = new_init
 

@@ -1,5 +1,6 @@
 from typing import Union
 
+from msgraphy.data import ListResponse, ApiIterable
 from msgraphy.data.file import DriveList, Drive
 from msgraphy.data.sharepoint import SiteResource, Site
 from msgraphy.client.graph_client import GraphResponse
@@ -20,6 +21,10 @@ class SharepointGraphApi:
 
     def get_site(self, site: SiteResource) -> GraphResponse[Site]:
         return self._api.client.make_request(url=site.resource, response_type=Site)
+
+    def list_sites(self) -> GraphResponse[ListResponse[Site]]:
+        response_type = ApiIterable(self._api.client, Site)
+        return self._api.client.make_request(url="/sites", response_type=response_type)
 
     def list_drives(self, site: SiteResource) -> GraphResponse[DriveList]:
         resource = site.resource + "/drives"

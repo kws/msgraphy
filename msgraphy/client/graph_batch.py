@@ -15,7 +15,8 @@ class StateError(Exception):
         super(StateError, self).__init__(*args)
 
 
-class RequestsGraphResponse(GraphResponse[T]):
+class BatchRequestsGraphResponse(GraphResponse[T]):
+
     def __init__(self, client, id, response_type):
         self.client = client
         self.id = id
@@ -36,14 +37,25 @@ class RequestsGraphResponse(GraphResponse[T]):
         if "status" in self.response:
             return self.response['status'] < 400
         else:
-            print(self.response)
             return self.response.ok
 
     @property
     def value(self) -> T:
         self.__ensure_response()
         data = self.response['body']
+        if not self.ok:
+            raise ValueError(f"Cannot call 'value' on failed call: {data}")
         return self.response_type(data)
+
+    @property
+    def text(self) -> str:
+        self.__ensure_response()
+        return self.response['body']
+
+    @property
+    def headers(self) -> dict:
+        self.__ensure_response()
+        return self.response.get("headers")
 
 
 class BatchGraphClient(GraphClient):
@@ -85,7 +97,7 @@ class BatchGraphClient(GraphClient):
         method = method.upper()
         values = dict(id=id, method=method, url=url, headers=headers, **request_args)
 
-        response = RequestsGraphResponse(self, id, response_type=response_type)
+        response = BatchRequestsGraphResponse(self, id, response_type=response_type)
 
         self.__requests.append(values)
         self.__responses[id] = response

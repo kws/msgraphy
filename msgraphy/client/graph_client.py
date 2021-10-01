@@ -23,6 +23,16 @@ class GraphResponse(Generic[T]):
 
     @property
     @abc.abstractmethod
+    def text(self) -> str:
+        return NotImplemented
+
+    @property
+    @abc.abstractmethod
+    def headers(self) -> dict:
+        return NotImplemented
+
+    @property
+    @abc.abstractmethod
     def value(self) -> T:
         return NotImplemented
 
