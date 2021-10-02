@@ -6,7 +6,7 @@ from msgraphy.data.sharepoint import SiteResource
 
 
 def main(name):
-    api = GraphApi(RequestsGraphClient(BasicAuth(scopes=["Sites.Read.All"])))
+    api = GraphApi(scopes=["Sites.Read.All"])
 
     response = api.sharepoint.list_sites(search=name)
     for site in response.value:

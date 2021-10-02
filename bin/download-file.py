@@ -8,7 +8,7 @@ from msgraphy.data.sharepoint import SiteResource
 
 
 def main(remote_file):
-    api = GraphApi(RequestsGraphClient(BasicAuth(scopes=["Files.Read.All"])), is_batch=True)
+    api = GraphApi(scopes=["Files.Read.All"], is_batch=True)
 
     _, filename = api.files.parse_file_path(remote_file)
     response = api.files.parse_drive_item(remote_file)

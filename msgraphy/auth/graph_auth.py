@@ -4,6 +4,8 @@ from pathlib import Path
 from typing import List, Union
 import msal
 
+from msgraphy.auth.config import MSGraphyConfig
+
 
 class FileSystemTokenCache(msal.SerializableTokenCache):
     """
@@ -88,44 +90,40 @@ class ConfidentialTokenWrapper:
 
 
 class BasicAuth:
-    try:
-        from dotenv import load_dotenv
-        load_dotenv()
-    except ModuleNotFoundError:
-        pass
 
-    def __init__(self, scopes=None):
-        client_id = os.environ['SHAREPOINT_CLIENT_ID']
-        tenant_id = os.environ['SHAREPOINT_TENANT']
-        client_credential = os.getenv("SHAREPOINT_CLIENT_SECRET")
-        authority = f"https://login.microsoftonline.com/{tenant_id}"
+    def __init__(self, config=None, scopes=None):
+        if not config:
+            config = MSGraphyConfig()
 
-        token_cache = os.environ.get("AUTH_TOKEN_CACHE")
-        if token_cache:
-            token_cache = FileSystemTokenCache(token_cache, save_on_exit=True)
+        token_cache = None
+        if config.token_cache_file:
+            token_cache = FileSystemTokenCache(config.token_cache_file, save_on_exit=True)
 
         if not scopes:
             scopes = ['https://graph.microsoft.com/.default']
-        if client_credential:
+
+        if isinstance(scopes, str):
+            scopes = [scopes]
+
+        if config.client_secret:
             self.__token_fetcher = ConfidentialTokenWrapper(
                 msal.ConfidentialClientApplication(
-                    client_id,
-                    authority=authority,
-                    client_credential=client_credential,
-                    token_cache = token_cache,
+                    config.client_id,
+                    authority=config.authority,
+                    client_credential=config.client_secret,
+                    token_cache=token_cache,
                 ),
                 scopes=scopes,
             )
         else:
             self.__token_fetcher = InteractiveTokenWrapper(
                 msal.PublicClientApplication(
-                    client_id,
-                    authority=authority,
-                    token_cache = token_cache,
-            ),
+                    config.client_id,
+                    authority=config.authority,
+                    token_cache=token_cache,
+                ),
                 scopes=scopes
             )
 
     def __call__(self):
         return self.__token_fetcher()
-

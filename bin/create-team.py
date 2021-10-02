@@ -2,30 +2,24 @@ import argparse
 from time import sleep
 
 from msgraphy import GraphApi
-from msgraphy.auth.graph_auth import BasicAuth
-from msgraphy.client.graph_client import RequestsGraphClient
 from msgraphy.data.team import Team
 
 
-def main(name):
-    client = RequestsGraphClient(BasicAuth(scopes=['Team.Create', 'TeamSettings.ReadWrite.All']))
-    api = GraphApi(client)
-
-    team = Team(display_name=name)
+def main(name, description=None):
+    api = GraphApi(scopes=['Team.Create', 'TeamSettings.ReadWrite.All'])
+    team = Team(display_name=name, description=description)
 
     response = api.team.create_team(team)
-    team_id = response.headers.get('Content-Location')
     location = response.headers.get('Location')
 
     sleep(1)
-    response = client.make_request(location).value
+    response = api.client.make_request(location).value
     while response.get("status") != 'succeeded':
-        sleep(.5)
-        response = client.make_request(location).value
+        print("Creating team:", response.get("status"), end="\r")
+        sleep(1)
+        response = api.client.make_request(location).value
 
     print(response)
-
-
 
 
 if __name__ == "__main__":
@@ -33,5 +27,6 @@ if __name__ == "__main__":
         description='Create an MS team'
     )
     parser.add_argument("name", type=str, help="The name of the team")
+    parser.add_argument("--description", "-d", type=str, nargs="?", help="Team description")
     args = parser.parse_args()
-    main(args.name)
+    main(**vars(args))

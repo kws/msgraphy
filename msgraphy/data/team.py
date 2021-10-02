@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime
 
 from msgraphy.data import graphdataclass
 
@@ -17,4 +17,16 @@ class Team:
     member_settings = None
     messaging_settings = None
     web_url: str = None
-    created_date_time: date = None
+    created_date_time: datetime = None
+
+
+@graphdataclass
+class Channel:
+    id: str = None
+    display_name: str = None
+    description: str = None
+    is_favourite_by_default: bool = None
+    email: str = None
+    web_url: str = None
+    membership_type = None
+    created_date_time: datetime = None

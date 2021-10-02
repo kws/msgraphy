@@ -1,17 +1,16 @@
 import argparse
 from msgraphy import GraphApi
-from msgraphy.auth.graph_auth import BasicAuth
-from msgraphy.client.graph_client import RequestsGraphClient
 from msgraphy.data.sharepoint import SiteResource
 
 
 def main(site):
+    api = GraphApi(scopes="Files.Read.All")
+
     if site:
         site = SiteResource(name=site)
     else:
         site = SiteResource()
 
-    api = GraphApi(RequestsGraphClient(BasicAuth()))
     response = api.sharepoint.list_drives(site)
     print(response.value)
 

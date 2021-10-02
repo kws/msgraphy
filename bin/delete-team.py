@@ -8,8 +8,7 @@ from msgraphy.data.team import Team
 
 
 def main(name):
-    client = RequestsGraphClient(BasicAuth(scopes=['Group.ReadWrite.All']))
-    api = GraphApi(client)
+    api = GraphApi(scopes=['Group.ReadWrite.All'])
     response = api.team.list_teams()
     for team in response.value:
         if team.display_name == name or team.id == name:
