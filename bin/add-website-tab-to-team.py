@@ -1,5 +1,7 @@
 import argparse
 from msgraphy import GraphApi
+import msgraphy_util
+
 
 def main(team_id, channel, tab_name, tab_url):
     api = GraphApi(scopes=['Team.Create', 'TeamSettings.ReadWrite.All'])
@@ -27,6 +29,7 @@ def main(team_id, channel, tab_name, tab_url):
         print("Created tab", response.value)
     else:
         print("Failed to create tab", response.text)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

@@ -1,6 +1,6 @@
 import argparse
 from msgraphy import GraphApi
-
+import msgraphy_util
 
 def main(name, channels, folder):
     api = GraphApi(scopes=["Group.Read.All"])

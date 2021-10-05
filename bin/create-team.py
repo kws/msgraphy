@@ -3,6 +3,7 @@ from time import sleep
 
 from msgraphy import GraphApi
 from msgraphy.data.team import Team
+import msgraphy_util
 
 
 def main(name, description=None):

@@ -5,6 +5,7 @@ from msgraphy import GraphApi
 from msgraphy.auth.graph_auth import BasicAuth
 from msgraphy.client.graph_client import RequestsGraphClient
 from msgraphy.data.team import Team
+import msgraphy_util
 
 
 def main(name):
