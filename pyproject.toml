@@ -8,9 +8,7 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = "^3.8"
 msal = "^1.10.0"
-Jinja2 = "^2.11.3"
 requests = "^2.25.1"
-lxml = "^4.6.3"
 pyhumps = "^3.0.2"
 
 
