@@ -1,9 +1,10 @@
 from contextlib import contextmanager
-from typing import Union, List
+from typing import Union, List, Iterable
 
+from msgraphy.client.graph_client import GraphClient, GraphResponse
+from msgraphy.data import ApiIterable
 from msgraphy.data.file import DriveItem
-from msgraphy.data.workbook import TableList, WorkbookSessionInfo, WorkbookTableRow, WorkbookTableRowList, \
-    WorkbookTableColumnList, WorkbookRange
+from msgraphy.data.workbook import WorkbookSessionInfo, WorkbookRange, Table, WorkbookTableRow, WorkbookTableColumn
 
 
 class WorkbookGraphApi:
@@ -11,15 +12,14 @@ class WorkbookGraphApi:
     def __init__(self, api: "....GraphApi"):
         self._api = api
 
-    def list_tables(self, drive_item: DriveItem) -> TableList:
+    def list_tables(self, drive_item: DriveItem) -> Iterable[Table]:
         resource = f"{drive_item.get_api_reference()}/workbook/tables"
-        response = self._api.client.make_request(url=resource)
-        return TableList(response.json())
+        return self._api.client.make_request(url=resource, response_type=ApiIterable(self._api.client, Table))
 
     def create_session(self, drive_item: DriveItem) -> WorkbookSessionInfo:
         resource = f"{drive_item.get_api_reference()}/workbook/createSession"
         response = self._api.client.make_request(url=resource, method="post")
-        return WorkbookSessionInfo(response.json(), workbook_reference=drive_item)
+        return WorkbookSessionInfo(response.value, workbook_reference=drive_item)
 
     def close_session(self, session: WorkbookSessionInfo):
         resource = f"{session.workbook_reference.get_api_reference()}/workbook/closeSession"
@@ -49,22 +49,30 @@ class TableGraphApi:
         self._session = session
         self._root_resource = f"{workbook.get_api_reference()}/workbook/tables/{table_name}"
 
-    def __make_request(self, *args, headers=None, **kwargs):
-        """ We use an internal method to make requests and ensure we always have session info if set"""
-        if self._session:
-            headers = {**headers, **self._session.headers()} if headers else {**self._session.headers()}
-        return self._api.client.make_request(*args,  headers=headers, **kwargs)
+        table_api = self
 
-    def get_table(self, select: str = None):
-        resource = f"{self._root_resource}"
+        class _Client(GraphClient):
+            def make_request(self, url="", headers=None, **kwargs):
+                """ We use an internal method to make requests and ensure we always have session info if set"""
+                if table_api._session:
+                    headers = {**headers, **table_api._session.headers()} if headers else {
+                        **table_api._session.headers()}
+                if url.startswith("/"):
+                    url = f"{table_api._root_resource}{url}"
+                else:
+                    url = f"{table_api._root_resource}/{url}"
+                return table_api._api.client.make_request(url, headers=headers, **kwargs)
+
+        self.client = _Client()
+
+    def get_table(self, select: str = None) -> GraphResponse[Table]:
         params = {}
         if select:
             params['$select'] = select
-        response = self.__make_request(url=resource, params=params)
-        return response.json()
+        return self.client.make_request(params=params, response_type=Table)
 
-    def get_rows(self, index: int = None, top: int = None, skip: int = None) -> WorkbookTableRowList:
-        resource = f"{self._root_resource}/rows"
+    def get_rows(self, index: int = None, top: int = None, skip: int = None) -> GraphResponse[Iterable[WorkbookTableRow]]:
+        resource = "/rows"
         params = None
         if index is not None:
             resource += f"/itemAt(index={index})"
@@ -75,11 +83,11 @@ class TableGraphApi:
             if skip is not None:
                 params['$skip'] = skip
 
-        response = self.__make_request(url=resource, params=params)
-        return WorkbookTableRowList(response.json())
+        return self.client.make_request(resource, params=params,
+                                        response_type=ApiIterable(self.client, WorkbookTableRow))
 
-    def get_columns(self, index: int = None, top: int = None, skip: int = None) -> WorkbookTableColumnList:
-        resource = f"{self._root_resource}/columns"
+    def get_columns(self, index: int = None, top: int = None, skip: int = None) -> GraphResponse[Iterable[WorkbookTableColumn]]:
+        resource = f"/columns"
         params = None
         if index is not None:
             resource += f"/itemAt(index={index})"
@@ -90,48 +98,50 @@ class TableGraphApi:
             if skip is not None:
                 params['$skip'] = skip
 
-        response = self.__make_request(url=resource, params=params)
-        return WorkbookTableColumnList(response.json())
+        return self.client.make_request(resource, params=params,
+                                        response_type=ApiIterable(self.client, WorkbookTableColumn))
 
-    def get_range(self, select=None) -> WorkbookRange:
-        resource = f"{self._root_resource}/range"
+    def get_range(self, select=None) -> GraphResponse[WorkbookRange]:
+        resource = f"/range"
         params = {}
         if select:
             params['$select'] = select
-        response = self.__make_request(url=resource, params=params)
-        return WorkbookRange(response.json())
+        return self.client.make_request(url=resource, params=params, response_type=WorkbookRange)
 
-    def get_data_body_range(self, select=None) -> WorkbookRange:
-        resource = f"{self._root_resource}/dataBodyRange"
+    def get_data_body_range(self, select=None) -> GraphResponse[WorkbookRange]:
+        resource = f"/dataBodyRange"
         params = {}
         if select:
             params['$select'] = select
-        response = self.__make_request(url=resource, params=params)
-        return WorkbookRange(response.json())
+        return self.client.make_request(url=resource, params=params, response_type=WorkbookRange)
 
-    def add_rows(self, values: List):
-        resource = f"{self._root_resource}/rows/add"
-        response = self.__make_request(url=resource, json=dict(values=values), method="post")
-        return response.json()
+    def get_header_row_range(self, select=None) -> GraphResponse[WorkbookRange]:
+        resource = f"/headerRowRange"
+        params = {}
+        if select:
+            params['$select'] = select
+        return self.client.make_request(url=resource, params=params, response_type=WorkbookRange)
 
-    def update_row(self, index: int, values: List):
-        resource = f"{self._root_resource}/rows/itemAt(index={index})"
-        response = self.__make_request(url=resource, json=dict(index=index, values=values), method="patch")
-        return response.json()
+    def add_rows(self, values: List) -> GraphResponse:
+        resource = f"/rows/add"
+        return self.client.make_request(url=resource, json=dict(values=values), method="post")
 
-    def delete_row(self, index: int):
-        resource = f"{self._root_resource}/rows/itemAt(index={index})"
-        self.__make_request(url=resource, method="delete")
+    def update_row(self, index: int, values: List) -> GraphResponse:
+        resource = f"/rows/itemAt(index={index})"
+        return self.client.make_request(url=resource, json=dict(index=index, values=values), method="patch")
 
-    def delete_range(self):
-        resource = f"{self._root_resource}/range/delete"
-        self.__make_request(url=resource, method="post")
+    def delete_row(self, index: int) -> GraphResponse:
+        resource = f"/rows/itemAt(index={index})"
+        return self.client.make_request(url=resource, method="delete")
 
-    def delete_data_body_range(self):
-        resource = f"{self._root_resource}/dataBodyRange/delete"
-        self.__make_request(url=resource, method="post")
+    def delete_range(self) -> GraphResponse:
+        resource = f"/range/delete"
+        return self.client.make_request(url=resource, method="post")
 
-    def get_filter_criteria(self, index: int):
-        resource = f"{self._root_resource}/columns/itemAt(index={index})/filter"
-        response = self.__make_request(url=resource, method="get")
-        return response.json()
+    def delete_data_body_range(self) -> GraphResponse:
+        resource = f"/dataBodyRange/delete"
+        return self.client.make_request(url=resource, method="post")
+
+    def get_filter_criteria(self, index: int) -> GraphResponse:
+        resource = f"/columns/itemAt(index={index})/filter"
+        return self.client.make_request(url=resource, method="get")

@@ -107,9 +107,9 @@ class FilterIterator:
         return v
 
 
-def ApiIterable(client, type: T, filter=None):
+def ApiIterable(client, type: T, filter=None) -> typing.Iterable[T]:
     @graphdataclass
-    class IterableType(typing.Generic[T]):
+    class IterableType(typing.Iterable[T]):
         value: typing.List[type]
 
         def __iter__(self):

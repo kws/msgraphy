@@ -20,14 +20,6 @@ class Table:
 
 
 @graphdataclass
-class TableList:
-    value: List[Table]
-
-    def __iter__(self):
-        return iter(self.value)
-
-
-@graphdataclass
 class WorkbookSessionInfo:
     id: str
     persist_changes: bool
@@ -51,16 +43,6 @@ class WorkbookTableColumn:
     index: int
     name: str
     values: List
-
-
-@graphdataclass
-class WorkbookTableRowList:
-    value: List[WorkbookTableRow]
-
-
-@graphdataclass
-class WorkbookTableColumnList:
-    value: List[WorkbookTableColumn]
 
 
 @graphdataclass
