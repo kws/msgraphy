@@ -13,9 +13,11 @@ class TeamGraphApi:
     def get_team(self, team_id) -> GraphResponse[Team]:
         return self._api.client.make_request(url=f"/teams/{team_id}", response_type=Team)
 
-    def list_teams(self, search=None, starts_with=None) -> GraphResponse[ListResponse[Group]]:
+    def list_teams(self, search=None, starts_with=None, exact=None) -> GraphResponse[ListResponse[Group]]:
         filter_query = "resourceProvisioningOptions/any(x:x eq 'Team')"
-        if starts_with:
+        if exact:
+            filter_query = f"{filter_query} and displayName eq '{exact}'"
+        elif starts_with:
             filter_query = f"{filter_query} and startsWith(displayName,'{starts_with}')"
 
         params = {"$filter": filter_query}

@@ -3,10 +3,10 @@ import argparse
 from msgraphy import GraphApi
 
 
-def main(name, starts_with, channels, folder):
+def main(name, starts_with, exact, channels, folder):
     api = GraphApi(scopes=["Group.Read.All"])
 
-    response = api.team.list_teams(search=name, starts_with=starts_with)
+    response = api.team.list_teams(search=name, starts_with=starts_with, exact=exact)
     for team in response.value:
         print(f"{team.display_name} [{team.id}]")
         print(team.description)
@@ -30,6 +30,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("name", type=str, nargs="?",  help="show only teams which contains [name]")
     parser.add_argument("--starts_with", "-s", type=str, nargs="?", metavar="value", help="only teams starting with [value]")
+    parser.add_argument("--exact", "-e", type=str, nargs="?", metavar="value", help="only teams exactly matching [value]")
     parser.add_argument("--channels", "-c", action='store_true', help="include channels")
     parser.add_argument("--folder", "-f", action='store_true', help="include channel folder (implies -c)")
 
