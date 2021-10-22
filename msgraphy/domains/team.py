@@ -1,4 +1,4 @@
-from msgraphy.client.graph_client import GraphResponse
+from msgraphy.client.graph_client import GraphResponse, URL_BETA
 from msgraphy.data import ListResponse, ApiIterable
 from msgraphy.data.file import DriveItem
 from msgraphy.data.group import Group
@@ -13,16 +13,24 @@ class TeamGraphApi:
     def get_team(self, team_id) -> GraphResponse[Team]:
         return self._api.client.make_request(url=f"/teams/{team_id}", response_type=Team)
 
-    def list_teams(self, search=None) -> GraphResponse[ListResponse[Group]]:
-        filter_team = lambda g: "Team" in g.resource_provisioning_options
+    def list_teams(self, search=None, starts_with=None) -> GraphResponse[ListResponse[Group]]:
+        filter_query = "resourceProvisioningOptions/any(x:x eq 'Team')"
+        if starts_with:
+            filter_query = f"{filter_query} and startsWith(displayName,'{starts_with}')"
+
+        params = {"$filter": filter_query}
+        headers = {}
+
         if search:
-            filter = lambda g: filter_team(g) and search.lower() in g.display_name.lower()
-        else:
-            filter = filter_team
+            params["$search"] = f'"displayName:{search}"'
+            headers["ConsistencyLevel"] = "eventual"
 
-        response_type = ApiIterable(self._api.client, Group, filter=filter)
-
-        return self._api.client.make_request(url="/groups", response_type=response_type)
+        return self._api.client.make_request(
+            url=f"{URL_BETA}groups",
+            headers=headers,
+            params=params,
+            response_type=ApiIterable(self._api.client, Group),
+        )
 
     def create_team(self, team: Team, template: str = "https://graph.microsoft.com/v1.0/teamsTemplates('standard')"):
         data = team.asdict()

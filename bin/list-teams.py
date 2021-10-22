@@ -1,16 +1,12 @@
+import msgraphy_util
 import argparse
 from msgraphy import GraphApi
-import msgraphy_util
 
-def main(name, channels, folder):
+
+def main(name, starts_with, channels, folder):
     api = GraphApi(scopes=["Group.Read.All"])
 
-    if name == "":
-        name = None
-
-
-
-    response = api.team.list_teams(search=name)
+    response = api.team.list_teams(search=name, starts_with=starts_with)
     for team in response.value:
         print(f"{team.display_name} [{team.id}]")
         print(team.description)
@@ -32,7 +28,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='List or search for MS team'
     )
-    parser.add_argument("name", type=str, nargs="?", help="show only teams which contains this name")
+    parser.add_argument("name", type=str, nargs="?",  help="show only teams which contains [name]")
+    parser.add_argument("--starts_with", "-s", type=str, nargs="?", metavar="value", help="only teams starting with [value]")
     parser.add_argument("--channels", "-c", action='store_true', help="include channels")
     parser.add_argument("--folder", "-f", action='store_true', help="include channel folder (implies -c)")
 
