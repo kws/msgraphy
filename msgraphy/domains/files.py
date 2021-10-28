@@ -72,6 +72,26 @@ class FilesGraphApi:
 
         return self._api.client.make_request(url=resource, method="get", response_type=DriveItem)
 
+    def list_permissions(self, item: DriveItem, role=None, granted_to=None) -> GraphResponse:
+        filter_list = []
+        if granted_to:
+            filter_list.append(f"grantedTo/user/displayName eq '{granted_to}'")
+        if role:
+            filter_list.append(f"roles/any(x:x eq '{role}')")
+
+        params = {}
+        if filter_list:
+            params['$filter'] = " and ".join(filter_list)
+
+        return self._api.client.make_request(f"{item.get_api_reference()}/permissions", params=params)
+
+    def update_permission(self, item: DriveItem, permission_id: str, role) -> GraphResponse:
+        return self._api.client.make_request(
+            f"{item.get_api_reference()}/permissions/{permission_id}",
+            method="patch",
+            json=dict(roles=[role]),
+        )
+
     def copy(self, item: BaseItem, new_parent_ref: BaseItem = None,
              new_name: str = None, conflict_behaviour=None) -> GraphResponse[Monitor]:
         """
