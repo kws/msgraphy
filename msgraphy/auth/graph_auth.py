@@ -48,9 +48,10 @@ class InteractiveTokenWrapper:
 
     """
 
-    def __init__(self, app: msal.PublicClientApplication, scopes: List[str]):
+    def __init__(self, app: msal.PublicClientApplication, scopes: List[str], device_flow=False):
         self.__app = app
         self.__scopes = scopes
+        self.__device_flow = device_flow
 
     def __call__(self):
         for account in self.__app.get_accounts():
@@ -58,7 +59,12 @@ class InteractiveTokenWrapper:
             if result and 'access_token' in result and result.get('expires_in', 0) > 30:
                 return result['access_token']
 
-        result = self.__app.acquire_token_interactive(self.__scopes)
+        if self.__device_flow:
+            flow = self.__app.initiate_device_flow(self.__scopes)
+            print(flow['message'])
+            result = self.__app.acquire_token_by_device_flow(flow)
+        else:
+            result = self.__app.acquire_token_interactive(self.__scopes)
         return result['access_token']
 
 
@@ -86,6 +92,8 @@ class ConfidentialTokenWrapper:
                 return result['access_token']
 
         result = self.__app.acquire_token_for_client(scopes=self.__scopes)
+        if "error" in result:
+            raise Exception(result.get("error_description", "An error occurred whilst acquiring token."))
         return result['access_token']
 
 
