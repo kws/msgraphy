@@ -71,17 +71,18 @@ class TableGraphApi:
             params['$select'] = select
         return self.client.make_request(params=params, response_type=Table)
 
+    def get_row(self, index) -> GraphResponse[WorkbookTableRow]:
+        resource = "/rows"
+        resource += f"/itemAt(index={index})"
+        return self.client.make_request(resource, response_type=WorkbookTableRow)
+
     def get_rows(self, index: int = None, top: int = None, skip: int = None) -> GraphResponse[Iterable[WorkbookTableRow]]:
         resource = "/rows"
-        params = None
-        if index is not None:
-            resource += f"/itemAt(index={index})"
-        else:
-            params = {}
-            if top is not None:
-                params['$top'] = top
-            if skip is not None:
-                params['$skip'] = skip
+        params = {}
+        if top is not None:
+            params['$top'] = top
+        if skip is not None:
+            params['$skip'] = skip
 
         return self.client.make_request(resource, params=params,
                                         response_type=ApiIterable(self.client, WorkbookTableRow))
