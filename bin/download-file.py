@@ -2,14 +2,10 @@ import argparse
 from pathlib import Path
 
 from msgraphy import GraphApi
-from msgraphy.auth.graph_auth import BasicAuth
-from msgraphy.client.graph_client import RequestsGraphClient
-from msgraphy.data.sharepoint import SiteResource
-import msgraphy_util
 
 
 def main(remote_file):
-    api = GraphApi(scopes=["Files.Read.All"], is_batch=True)
+    api = GraphApi(scopes=["Files.Read.All"], batch=True)
 
     _, filename = api.files.parse_file_path(remote_file)
     response = api.files.parse_drive_item(remote_file)
