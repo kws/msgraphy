@@ -110,7 +110,29 @@ class RequestsGraphClient(GraphClient):
 
         request_args = {"timeout": self._config['timeout'], **kwargs}
 
-        response = requests.request(method, url, headers=headers, **request_args)
+        @timeout_retry(self._config.get("timeout_retry", 0))
+        def _make_request():
+            return requests.request(method, url, headers=headers, **request_args)
+
+        response = _make_request()
         return RequestsGraphResponse(response, response_type)
 
 
+def timeout_retry(retries):
+    left = dict(retries=int(retries))
+
+    def decorator(f):
+        def inner(*args, **kwargs):
+            while True:
+                try:
+                    return f(*args, **kwargs)
+                except (
+                        requests.exceptions.ReadTimeout,
+                        requests.exceptions.ConnectTimeout,
+                        requests.exceptions.ConnectionError,
+                ) as e:
+                    if left['retries'] <= 0:
+                        raise e
+                    left['retries'] -= 1
+        return inner
+    return decorator
