@@ -1,3 +1,4 @@
+from fs.errors import ResourceNotFound
 from fs.opener import Opener
 
 __all__ = ['MSGraphyOneDriveFSOpener']
@@ -9,9 +10,13 @@ class MSGraphyOneDriveFSOpener(Opener):
     protocols = ['o365']
 
     def open_fs(self, fs_url, parse_result, writeable, create, cwd):
-        if parse_result.username:
-            resource = f"{parse_result.username}@{parse_result.resource}"
-        else:
-            resource = parse_result.resource
+        url = fs_url[7:]
+        root, path = url.split(':', 1)
 
-        return MSGraphyOneDriveFS(resource, writeable)
+        fs = MSGraphyOneDriveFS(f'{root}:/', writeable)
+        if path not in ('', '/'):
+            if create:
+                fs = fs.makedirs(path, recreate=True)
+            else:
+                fs = fs.opendir(path)
+        return fs
