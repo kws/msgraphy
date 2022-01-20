@@ -6,10 +6,11 @@ authors = ["Kaj Siebert <kaj@k-si.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = ">=3.7"
+python = ">=3.7, <4"
 msal = "^1.10.0"
 requests = "^2.25.1"
 pyhumps = "^3.0.2"
+"fs.onedrivefs" = {version = "^1.1.1", optional = true}
 
 
 [tool.poetry.dev-dependencies]
@@ -17,6 +18,12 @@ python-dotenv = "^0.17.0"
 pytest = "^6.2.5"
 bump2version = "^1.0.1"
 coverage = "^6.2"
+
+[tool.poetry.extras]
+fs = ["fs.onedrivefs"]
+
+[tool.poetry.plugins."fs.opener"]
+"o365" = "msgraphy.fs.opener:MSGraphyOneDriveFSOpener"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

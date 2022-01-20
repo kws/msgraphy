@@ -18,6 +18,7 @@ def test_config_environ():
     assert config.tenant_id == "--tenant-id--"
 
 
+@mock.patch.dict(os.environ, {}, clear=True)
 def test_config_no_environ():
     with pytest.raises(KeyError):
         config = MSGraphyConfig()
