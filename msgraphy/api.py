@@ -1,6 +1,5 @@
-from contextlib import contextmanager
-
 from msgraphy.auth.graph_auth import BasicAuth
+from msgraphy.client.graph_batch import BatchGraphClient
 from msgraphy.client.graph_client import RequestsGraphClient
 from msgraphy.domains.files import FilesGraphApi
 from msgraphy.domains.group import GroupGraphApi
@@ -14,15 +13,17 @@ from msgraphy.domains.workbook import WorkbookGraphApi
 
 class GraphApi:
 
-    def __init__(self, client=None, scopes=None, is_batch=False):
-        if not client:
-            client = RequestsGraphClient(BasicAuth(scopes=scopes))
-        elif scopes:
+    def __init__(self, client=None, scopes=None, batch=False):
+        if client is not None and scopes is not None:
             raise Exception("Cannot both set client and scopes")
 
-        self.client = client
-        self._is_batch = is_batch
+        if not client:
+            client = RequestsGraphClient(BasicAuth(scopes=scopes))
 
+        if batch:
+            client = BatchGraphClient(client)
+
+        self.client = client
         self.files = FilesGraphApi(self)
         self.group = GroupGraphApi(self)
         self.list = ListGraphApi(self)
@@ -31,15 +32,3 @@ class GraphApi:
         self.team = TeamGraphApi(self)
         self.user = UserGraphApi(self)
         self.workbook = WorkbookGraphApi(self)
-
-    @contextmanager
-    def batch(self):
-        if self._is_batch:
-            return self
-        from msgraphy.client.graph_batch import BatchGraphClient
-        client = BatchGraphClient(self.client)
-        batch_api = GraphApi(client=client, is_batch=True)
-        try:
-            yield batch_api
-        finally:
-            client.flush()

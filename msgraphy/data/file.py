@@ -80,6 +80,7 @@ class FolderFacet:
 @graphdataclass
 class DriveItem(BaseItem):
     audio: dict = None
+    c_tag: str = None
     content: str = None
     deleted: bool = None
     file: FileFacet = None
