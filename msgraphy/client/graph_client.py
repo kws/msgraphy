@@ -85,8 +85,6 @@ class GraphClient(abc.ABC):
 class RequestsGraphClient(GraphClient):
     DEFAULTS = dict(
         root_url=URL_V1,
-        scope='https://graph.microsoft.com/.default',
-        grant_type='client_credentials',
         timeout=5,
     )
 
