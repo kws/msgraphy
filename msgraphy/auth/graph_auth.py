@@ -128,7 +128,8 @@ class BasicAuth:
                     authority=config.authority,
                     token_cache=token_cache,
                 ),
-                scopes=scopes
+                scopes=scopes,
+                device_flow=config.device_flow,
             )
 
     def __call__(self):

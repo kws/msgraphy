@@ -8,6 +8,7 @@ class MSGraphyConfig:
                  client_secret=None,
                  tenant_id=None,
                  authority=None,
+                 device_flow=None,
                  token_cache_file=None,
                  env_prefix="MSGRAPHY"
                  ):
@@ -26,6 +27,10 @@ class MSGraphyConfig:
 
         if not authority:
             authority = os.getenv(f'{env_prefix}_AUTHORITY')
+
+        if device_flow is None:
+            device_flow = bool(os.getenv(f'{env_prefix}_DEVICE_FLOW', "False"))
+        self.device_flow = device_flow
 
         if not authority:
             if tenant_id:
@@ -48,6 +53,7 @@ class UserSettingsConfig:
         s.add_setting("client_id", str, default="")
         s.add_setting("client_secret", str, default="")
         s.add_setting("authority", str, default="")
+        s.add_setting("device_flow", bool, default=False)
 
         s.load_settings()
 
@@ -71,6 +77,15 @@ class UserSettingsConfig:
     @client_secret.setter
     def client_secret(self, value):
         self.__settings.client_secret = value
+        self.save()
+
+    @property
+    def device_flow(self):
+        return self.__settings.device_flow
+
+    @device_flow.setter
+    def device_flow(self, value: bool):
+        self.__settings.device_flow = value
         self.save()
 
     @property
