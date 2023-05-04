@@ -29,7 +29,18 @@ class MSGraphyConfig:
             authority = os.getenv(f'{env_prefix}_AUTHORITY')
 
         if device_flow is None:
-            device_flow = bool(os.getenv(f'{env_prefix}_DEVICE_FLOW', "False"))
+            device_flow = os.getenv(f'{env_prefix}_DEVICE_FLOW')
+
+        if isinstance(device_flow, str):
+            if device_flow.lower() in ['true', '1', 'yes', 'y', 't']:
+                from .graph_auth import default_device_flow_handler
+                device_flow = default_device_flow_handler
+            else:
+                try:
+                    from pkgutil import resolve_name
+                except ImportError:
+                    raise Exception("Using resolver plugins requires Python >= 3.9")
+                device_flow = resolve_name(device_flow)
         self.device_flow = device_flow
 
         if not authority:

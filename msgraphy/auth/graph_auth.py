@@ -1,9 +1,18 @@
 import atexit
 from pathlib import Path
-from typing import List, Union
+from typing import Callable, List, Union
 import msal
 
 from msgraphy.auth.config import MSGraphyConfig
+
+
+def default_device_flow_handler(device_code):
+    myprint = print
+    try:
+        from rich import print as myprint
+    except ImportError:
+        pass
+    myprint(device_code['message'])
 
 
 class FileSystemTokenCache(msal.SerializableTokenCache):
@@ -47,9 +56,14 @@ class InteractiveTokenWrapper:
 
     """
 
-    def __init__(self, app: msal.PublicClientApplication, scopes: List[str], device_flow=False):
+    def __init__(self, app: msal.PublicClientApplication, scopes: List[str], device_flow: Callable = None):
         self.__app = app
         self.__scopes = scopes
+
+        # Support older versions of configuration
+        if isinstance(device_flow, bool) and device_flow:
+            device_flow = default_device_flow_handler
+
         self.__device_flow = device_flow
 
     def __call__(self):
@@ -60,6 +74,7 @@ class InteractiveTokenWrapper:
 
         if self.__device_flow:
             flow = self.__app.initiate_device_flow(self.__scopes)
+            self.__device_flow(flow)
             result = self.__app.acquire_token_by_device_flow(flow)
         else:
             result = self.__app.acquire_token_interactive(self.__scopes)
