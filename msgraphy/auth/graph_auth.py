@@ -1,5 +1,4 @@
 import atexit
-import os
 from pathlib import Path
 from typing import List, Union
 import msal
@@ -61,7 +60,6 @@ class InteractiveTokenWrapper:
 
         if self.__device_flow:
             flow = self.__app.initiate_device_flow(self.__scopes)
-            print(flow['message'])
             result = self.__app.acquire_token_by_device_flow(flow)
         else:
             result = self.__app.acquire_token_interactive(self.__scopes)
@@ -130,7 +128,8 @@ class BasicAuth:
                     authority=config.authority,
                     token_cache=token_cache,
                 ),
-                scopes=scopes
+                scopes=scopes,
+                device_flow=config.device_flow,
             )
 
     def __call__(self):
