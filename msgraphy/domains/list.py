@@ -3,7 +3,7 @@ from typing import Union
 
 from msgraphy.client.graph_client import GraphResponse
 from msgraphy.data import ApiIterable, ListResponse
-from msgraphy.data.list import List, ListColumn
+from msgraphy.data.list import List, ListColumn, ListItem
 from msgraphy.data.sharepoint import SiteResource
 
 
@@ -22,19 +22,22 @@ class ListGraphApi:
 
     def get_items(self, site: SiteResource, list_name: str,
                   fields: Union[str, bool] = None,
+                  drive_item: bool = False,
                   filter: str = None,
-                  ) -> GraphResponse[ListResponse[List]]:
+                  ) -> GraphResponse[ListResponse[ListItem]]:
 
         params = {}
         if isinstance(fields, bool) and fields:
             params['expand'] = "fields"
         elif isinstance(fields, str):
             params['expand'] = f"fields(select={fields})"
+        elif drive_item:
+            params['expand'] = "driveItem"
 
         if filter is not None:
             params['filter'] = filter
 
-        response_type = ApiIterable(self._api.client, List)
+        response_type = ApiIterable(self._api.client, ListItem)
 
         response = self._api.client.make_request(
             url=f"{site.resource}/lists/{list_name}/items",

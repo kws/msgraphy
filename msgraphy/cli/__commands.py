@@ -3,7 +3,9 @@ import logging
 import click
 import click_log
 from rich import print_json, print
+from rich.live import Live
 from rich.table import Table
+import csv
 
 from .__settings import app_settings
 from .. import GraphApi
@@ -113,3 +115,101 @@ def sites_drives(ctx, name, table):
         print(table)
     else:
         print_json(response.text)
+
+
+@sites.command(name="lists")
+@click.argument("name")
+@click.option("--table", help="Display as table", is_flag=True)
+@click.pass_context
+def site_lists(ctx, name, table):
+    api = __get_api(ctx, ["Sites.Read.All"])
+    response = api.sharepoint.list_lists(SiteResource(name=name))
+
+    if table:
+        table = Table()
+        table.add_column("ID")
+        table.add_column("Name")
+        table.add_column("Created")
+        table.add_column("Last Modified")
+
+        for site in response.value:
+            table.add_row(
+                site.id,
+                site.name,
+                f"{site.created_date_time}",
+                f"{site.last_modified_date_time}",
+            )
+
+        print(table)
+    else:
+        print_json(response.text)
+
+
+@sites.command(name="drive-items")
+@click.argument("site_name")
+@click.argument("drive_name")
+@click.option("--export", help="Export as table", type=click.File('w'), default=None)
+@click.pass_context
+def drive_contents(ctx, site_name, drive_name, export):
+    api = __get_api(ctx, ["Sites.Read.All"])
+    response = api.sharepoint.list_lists(SiteResource(name=site_name))
+    list_id = None
+    for list in response.value:
+        if list.name.lower() == drive_name.lower():
+            list_id = list.id
+        
+    if list_id is None:
+        print("List not found:" + list_name)   
+        return
+
+    all_items = []
+    response = api.list.get_items(SiteResource(name=site_name), list_id, drive_item=True)
+    for item in response.value:
+        # print(item.__API_DATA__)
+        parent_path = item.drive_item.get("parentReference", {}).get("path")
+        if parent_path:
+            parent_path = parent_path.split(":", 1)[1]
+        
+
+        row = (
+            item.id,
+            item.drive_item.get("id"),
+            parent_path,
+            item.drive_item.get("name"),
+            str(item.drive_item.get("size")) if "size" in item.drive_item else "",
+            str(item.drive_item.get("folder", {}).get("childCount")) if "folder" in item.drive_item else "",
+            item.drive_item.get("eTag"),
+            item.drive_item.get("cTag"),
+            item.drive_item.get("file", {}).get("mimeType"),
+            item.drive_item.get("file", {}).get("hashes", {}).get("quickXorHash"),
+            item.drive_item.get("createdBy", {}).get("user", {}).get("email"),
+            item.drive_item.get("lastModifiedBy", {}).get("user", {}).get("email"),
+            item.drive_item.get("shared", {}).get("scope"),
+            f"{item.created_date_time}",
+            f"{item.last_modified_date_time}",
+        )
+        all_items.append(row)
+        print(row)
+
+    if export:
+        writer = csv.writer(export)
+        writer.writerow(
+            [
+                "ID",
+                "Drive Item ID",
+                "Parent Path",
+                "Name",
+                "Size",
+                "Child Count",
+                "ETag",
+                "CTag",
+                "Mime Type",
+                "Hash",
+                "Created By",
+                "Last Modified By",
+                "Shared",
+                "Created",
+                "Last Modified",
+            ]
+        )
+        writer.writerows(all_items)

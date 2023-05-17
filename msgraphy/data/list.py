@@ -12,6 +12,12 @@ class List(BaseItem):
 
 
 @graphdataclass
+class ListItem(BaseItem):
+    fields: typing.Dict = None
+    drive_item: "msgraphy.data.DriveItem" = None
+
+
+@graphdataclass
 class ListColumn:
     id: str
     column_group: str
@@ -28,3 +34,11 @@ class ListColumn:
     text = None
     date_time = None
     number = None
+
+
+@graphdataclass
+class ListList:
+    value: typing.List[List]
+
+    def __iter__(self):
+        return iter(self.value)
