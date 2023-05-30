@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "msgraphy"
-version = "0.3.6"
+version = "0.4.0"
 description = "An API generator for the MS Graph API"
 authors = ["Kaj Siebert <kaj@k-si.com>"]
 license = "MIT"
